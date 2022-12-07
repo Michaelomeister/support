@@ -412,7 +412,7 @@ logging "info" "Checking to see if Rosetta2 is needed ..."
 rosetta2_check "$processor_brand"
 
 logging "info" "Checking to see if Xcode cli tools are needed ..."
-xcode_cli_tools
+#xcode_cli_tools
 
 logging "info" "Determining Homebrew path prefix ..."
 brew_prefix=$(set_brew_prefix "$processor_brand")

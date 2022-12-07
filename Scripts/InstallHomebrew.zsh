@@ -226,7 +226,7 @@ rosetta2_check() {
 xcode_cli_tools() {
     # Check for and install Xcode CLI tools
     # Run command to check for an Xcode cli tools path
-    /usr/bin/xcrun --version >/dev/null 2>&1
+    xcode-select -p &> /dev/null
 
     # check to see if there is a valide CLI tools path
     # shellcheck disable=SC2181
@@ -235,32 +235,11 @@ xcode_cli_tools() {
 
     else
         logging "info" "Valid Xcode CLI tools path was not found ..."
-
-        # find out when the OS was built
-        build_year=$(/usr/bin/sw_vers -buildVersion | cut -c 1,2)
-
-        # Trick softwareupdate into giving us everything it knows about Xcode CLI tools
-        xclt_tmp="/tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress"
-
-        # create the file above
-        logging "info" "Creating $xclt_tmp ..."
-        /usr/bin/touch "${xclt_tmp}"
-
-        if [[ ${build_year} -ge 19 ]]; then
-            # for Catalina or newer
-            logging "info" "Getting the latest Xcode CLI tools available ..."
-            cmd_line_tools=$(/usr/bin/su - "$current_user" -c exec zsh -l "/usr/sbin/softwareupdate -l |
-                awk '/\*\ Label: Command Line Tools/ { $1=$1;print }' |
-                sed 's/^[[ \t]]*//;s/[[ \t]]*$//;s/*//' | cut -c 9-")
-
-        else
-            # For Mojave or older
-            logging "info" "Getting the latest Xcode CLI tools available ..."
-            cmd_line_tools=$(/usr/bin/su - "$current_user" -c exec zsh -l "/usr/sbin/softwareupdate -l |
-                /usr/bin/awk '/\*\ Command Line Tools/ { $1=$1;print }' |
-                /usr/bin/grep -i "macOS" |
-                /ussr/bin/sed 's/^[[ \t]]*//;s/[[ \t]]*$//;s/*//' | /usr/bin/cut -c 2-")
-        fi
+        
+        logging "info" "Getting the latest Xcode CLI tools available ..."
+        cmd_line_tools=$(/usr/bin/su - "$current_user" -c exec zsh -l "/usr/sbin/softwareupdate -l |
+            awk '/\*\ Label: Command Line Tools/ { $1=$1;print }' |
+            sed 's/^[[ \t]]*//;s/[[ \t]]*$//;s/*//' | cut -c 9-")
 
         if [[ "${cmd_line_tools}" == "" ]]; then
             logging "warning" "Unable to determine available XCode CLI tool updates ..."

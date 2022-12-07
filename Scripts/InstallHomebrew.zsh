@@ -166,7 +166,7 @@ logging() {
     /bin/echo "$prefix $log_statement"
 
     # send log statement to log file
-    printf "%s %s\n" "$prefix" "$log_statement" >>"$LOG_PATH"
+    printf "%s %s" "$prefix" "$log_statement" >>"$LOG_PATH"
 
 }
 

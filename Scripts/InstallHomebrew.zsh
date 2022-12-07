@@ -249,17 +249,17 @@ xcode_cli_tools() {
         if [[ ${build_year} -ge 19 ]]; then
             # for Catalina or newer
             logging "info" "Getting the latest Xcode CLI tools available ..."
-            cmd_line_tools=$(/usr/sbin/softwareupdate -l |
+            cmd_line_tools=$(/usr/bin/su - "$current_user" -c exec zsh -l "/usr/sbin/softwareupdate -l |
                 awk '/\*\ Label: Command Line Tools/ { $1=$1;print }' |
-                sed 's/^[[ \t]]*//;s/[[ \t]]*$//;s/*//' | cut -c 9-)
+                sed 's/^[[ \t]]*//;s/[[ \t]]*$//;s/*//' | cut -c 9-")
 
         else
             # For Mojave or older
             logging "info" "Getting the latest Xcode CLI tools available ..."
-            cmd_line_tools=$(/usr/sbin/softwareupdate -l |
+            cmd_line_tools=$(/usr/bin/su - "$current_user" -c exec zsh -l "/usr/sbin/softwareupdate -l |
                 /usr/bin/awk '/\*\ Command Line Tools/ { $1=$1;print }' |
                 /usr/bin/grep -i "macOS" |
-                /ussr/bin/sed 's/^[[ \t]]*//;s/[[ \t]]*$//;s/*//' | /usr/bin/cut -c 2-)
+                /ussr/bin/sed 's/^[[ \t]]*//;s/[[ \t]]*$//;s/*//' | /usr/bin/cut -c 2-")
         fi
 
         if [[ "${cmd_line_tools}" == "" ]]; then
@@ -281,8 +281,8 @@ xcode_cli_tools() {
         logging "info" "Installing the latest Xcode CLI tools ..."
 
         # Sending this output to the local homebrew_install.log as well as stdout
-        /usr/sbin/softwareupdate -i "${cmd_line_tools}" --verbose |
-            /usr/bin/tee -a "${LOG_PATH}"
+        /usr/bin/su - "$current_user" -c exec zsh -l "/usr/sbin/softwareupdate -i "${cmd_line_tools}" --verbose |
+            /usr/bin/tee -a "${LOG_PATH}""
 
         # cleanup the temp file
         logging "info" "Cleaning up $xclt_tmp ..."

@@ -230,44 +230,54 @@ xcode_cli_tools() {
 
     # check to see if there is a valide CLI tools path
     # shellcheck disable=SC2181
-    if [[ "$?" -eq 0 ]]; then
-        logging "info" "Valid Xcode path found. No need to install Xcode CLI tools ..."
-
+    
+    if [ $? -ne 0 ]; then
+        logging "Command Line Tools for Xcode not found. Installing from softwareupdate…"
+        # This temporary file prompts the 'softwareupdate' utility to list the Command Line Tools
+        touch /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress;
+        PROD=$(/usr/bin/su - "$current_user" -c exec zsh -l "softwareupdate -l | grep "\*.*Command Line" | tail -n 1 | sed 's/^[^C]* //'")
+        /usr/bin/su - "$current_user" -c exec zsh -l "softwareupdate -i "$PROD" --verbose;"
     else
-        logging "info" "Valid Xcode CLI tools path was not found ..."
-        
-        logging "info" "Getting the latest Xcode CLI tools available ..."
-        cmd_line_tools=$(/usr/bin/su - "$current_user" -c exec zsh -l "/usr/sbin/softwareupdate -l |
-            awk '/\*\ Label: Command Line Tools/ { $1=$1;print }' |
-            sed 's/^[[ \t]]*//;s/[[ \t]]*$//;s/*//' | cut -c 9-")
-
-        if [[ "${cmd_line_tools}" == "" ]]; then
-            logging "warning" "Unable to determine available XCode CLI tool updates ..."
-            logging "warning" "This may require manual installation ..."
-
-        else
-            logging "info" "XCode CLI tool updates found: ${cmd_line_tools}"
-        fi
-
-        if (($(/usr/bin/grep -c . <<<"${cmd_line_tools}") > 1)); then
-            cmd_line_tools_output="${cmd_line_tools}"
-            cmd_line_tools=$(printf "%s" "${cmd_line_tools_output}" | /usr/bin/tail -1)
-
-            logging "info" "Latest Xcode CLI tools found: $cmd_line_tools"
-        fi
-
-        # run softwareupdate to install Xcode CLI tools
-        logging "info" "Installing the latest Xcode CLI tools ..."
-
-        # Sending this output to the local homebrew_install.log as well as stdout
-        /usr/bin/su - "$current_user" -c exec zsh -l "/usr/sbin/softwareupdate -i "${cmd_line_tools}" --verbose |
-            /usr/bin/tee -a "${LOG_PATH}""
-
-        # cleanup the temp file
-        logging "info" "Cleaning up $xclt_tmp ..."
-        /bin/rm "${xclt_tmp}"
-
+        logging "Command Line Tools for Xcode have been installed."
     fi
+#     if [[ "$?" -eq 0 ]]; then
+#         logging "info" "Valid Xcode path found. No need to install Xcode CLI tools ..."
+
+#     else
+#         logging "info" "Valid Xcode CLI tools path was not found ..."
+        
+#         logging "info" "Getting the latest Xcode CLI tools available ..."
+#         cmd_line_tools=$(/usr/bin/su - "$current_user" -c exec zsh -l "/usr/sbin/softwareupdate -l |
+#             awk '/\*\ Label: Command Line Tools/ { $1=$1;print }' |
+#             sed 's/^[[ \t]]*//;s/[[ \t]]*$//;s/*//' | cut -c 9-")
+
+#         if [[ "${cmd_line_tools}" == "" ]]; then
+#             logging "warning" "Unable to determine available XCode CLI tool updates ..."
+#             logging "warning" "This may require manual installation ..."
+
+#         else
+#             logging "info" "XCode CLI tool updates found: ${cmd_line_tools}"
+#         fi
+
+#         if (($(/usr/bin/grep -c . <<<"${cmd_line_tools}") > 1)); then
+#             cmd_line_tools_output="${cmd_line_tools}"
+#             cmd_line_tools=$(printf "%s" "${cmd_line_tools_output}" | /usr/bin/tail -1)
+
+#             logging "info" "Latest Xcode CLI tools found: $cmd_line_tools"
+#         fi
+
+#         # run softwareupdate to install Xcode CLI tools
+#         logging "info" "Installing the latest Xcode CLI tools ..."
+
+#         # Sending this output to the local homebrew_install.log as well as stdout
+#         /usr/bin/su - "$current_user" -c exec zsh -l "/usr/sbin/softwareupdate -i "${cmd_line_tools}" --verbose |
+#             /usr/bin/tee -a "${LOG_PATH}""
+
+#         # cleanup the temp file
+#         logging "info" "Cleaning up $xclt_tmp ..."
+#         /bin/rm "${xclt_tmp}"
+
+#     fi
 }
 
 set_brew_prefix() {
